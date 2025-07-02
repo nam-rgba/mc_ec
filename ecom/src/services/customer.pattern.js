@@ -35,10 +35,11 @@ class CustomerFactory {
         if (!customerFound) throw new NotFoundError('Not found Customer!')
 
         const tagFound = await tags.findById(tagId).lean()
+        if (!tagFound._id) throw new NotFoundError('Not found tag!')
         if (!tagFound) throw new NotFoundError('Not found tag!')
 
 
-        customerFound.tag = tagFound
+        customerFound.tag = [...customerFound.tag, tagFound]
         await customerFound.save()
 
         return customerFound.toObject()

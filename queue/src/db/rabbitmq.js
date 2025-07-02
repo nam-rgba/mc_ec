@@ -30,4 +30,20 @@ const test_connectRabbitmq = async ()=>{
     }
 }
 
-module.exports = {connectRabbitmq, test_connectRabbitmq}
+const consumerQueue = async (channel, queueName) =>{
+    try {
+        await channel.assertQueue(queueName, {durable: true})
+        console.log('waiting for message...')
+
+        channel.consume(queueName, msg =>{
+            console.log(`Recived message: ${queueName}::`, msg.content.toString())
+        },{
+            noAck: true
+        })
+    } catch (error) {
+        console.error('error publish message to RabbitMQ: ',error )
+        throw Error
+    }
+}
+
+module.exports = {connectRabbitmq, test_connectRabbitmq, consumerQueue}
