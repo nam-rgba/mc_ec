@@ -1,6 +1,8 @@
 const mongoose = require('mongoose');
 
-const uri = 'mongodb://localhost:27017/ecom';
+const MONGODB_PASS = process.env.MONGODB_PASS;
+
+const uri = `mongodb+srv://doanngocnam:${MONGODB_PASS}@rise.vhheesf.mongodb.net/?retryWrites=true&w=majority&appName=rise`
 
 mongoose.connect(uri, {
 }).then(() => {
