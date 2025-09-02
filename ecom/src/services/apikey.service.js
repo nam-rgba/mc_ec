@@ -1,5 +1,4 @@
 const Apikey = require('../models/apikey.model');
-const crypto = require('crypto');
 
 const findBykey = async (key) => {
 

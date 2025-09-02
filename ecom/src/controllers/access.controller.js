@@ -6,6 +6,7 @@ const {OK, Created} = require('../res/success.response');
 // then return the response to the client
 class AcessController {
     signUp = async (req, res, next) => {
+        console.log("body",req.body)
         new Created({
             message: 'User created successfully',
             metadata: await AccessService.signup(req.body)

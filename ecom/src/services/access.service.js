@@ -8,23 +8,18 @@ const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 
 // import models
-const shop = require('../models/shop.model');
+// const shop = require('../models/shop.model');
+const userService = require('./user.service');
 
 // import services
 const KeyTokenService = require('./token.service');
-const { findByEmail } = require('./shop.service')
+const { findByEmail } = require('./user.service')
 
 // import middleware and helper
 const { createTokenPair } = require('../auth/auth');
 const { getInfoData } = require('../utils/index');
 const { BadRequestError, AuthFailureError } = require('../res/error.response');
-
-const Roles = {
-    SHOP: '000S1',//SHOP
-    WRITER: '000S2',//WRITER
-    EDITOR: '000S3',//EDITOR
-    ADMIN: '000S4',//ADMIN
-}
+const { Roles } = require('../constants/role');
 
 class AccessService {
 
@@ -39,13 +34,13 @@ class AccessService {
     */
     static signin = async ({ email, password, refreshToken }) => {
         // step 1: check email
-        const foundShop = await findByEmail({ email })
+        const foundUser = await userService.findOneUserByEmail( email )
         // console.log(foundShop)
-        if (!foundShop) throw new BadRequestError('No shop found!')
+        if (!foundUser) throw new AuthFailureError('Email or password not found!')
 
         // step 2: check password match
-        const isPasswordMatch = await bcrypt.compare(password, foundShop.password)
-        if (!isPasswordMatch) throw new AuthFailureError('Authenticated error!')
+        const isPasswordMatch = await bcrypt.compare(password, foundUser.password)
+        if (!isPasswordMatch) throw new AuthFailureError('Email or password not found!')
 
         // step 3: generate pair of key     
         const accessKey = crypto.randomBytes(32).toString('hex');
@@ -53,7 +48,7 @@ class AccessService {
 
         // step 4: tokens
         // destructuring
-        const { _id: userId } = foundShop
+        const { _id: userId } = foundUser
 
         const tokens = createTokenPair({ userId, email }, accessKey, refreshKey)
 
@@ -66,23 +61,26 @@ class AccessService {
 
         // step 5: return
         return {
-            shop: getInfoData(foundShop, ['_id', 'email', 'name']),
+            user: getInfoData(foundUser, ['_id', 'email', 'name']),
             tokens
         }
     }
 
     // Sign Up function ----------------------------------------------------------- 
     static signup = async ({ name, email, password }) => {
+
+        console.log('email', email) 
+
         try {
             // Step 1: find email
-            const emailholder = await shop.findOne({ email: email }).lean();
+            const emailholder = await userService.findOneUserByEmail(email, 'email');
             if (emailholder) {
                 throw new BadRequestError('Email already exists');
             }
             // Step 2:  create new shop
             const hashPassword = bcrypt.hashSync(password, 10);
-            const newShop = await shop.create({
-                name, email, password: hashPassword, role: Roles.SHOP
+            const newShop = await userService.createNewUser({
+                name, email, password: hashPassword, role: Roles.USER
             });
             /* ------------------------------------------------------------------------------------------- */
             // Step 3:  if create shop success
@@ -142,22 +140,15 @@ class AccessService {
             }
 
         } catch (error) {
-            return {
-                code: 'xxx',
-                message: error.message,
-                status: 'error'
-            }
+            throw new BadRequestError(error.message)
         }
     }
 
     /* Logout function */
     static signout = async(keyStore) =>{
-
-
         // console.log('sigout:',keyStore)
         const abandon = await KeyTokenService.removeKey(keyStore._id)
         return abandon
-
         
     }
 }

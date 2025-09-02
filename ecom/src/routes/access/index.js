@@ -5,11 +5,11 @@ const {asyncHandler} = require('../../helpers/asyncHandler');
 const { authentication } = require('../../auth/auth');
 
 
-router.post('/shop/signup', asyncHandler(accessController.signUp));
-router.post('/shop/signin', asyncHandler(accessController.signin));
+router.post('/user/signup', asyncHandler(accessController.signUp));
+router.post('/user/signin', asyncHandler(accessController.signin));
 
 /* Authentication */
 router.use(authentication)
 
-router.post('/shop/signout', asyncHandler(accessController.signout))
+router.post('/user/signout', asyncHandler(accessController.signout))
 module.exports = router;
